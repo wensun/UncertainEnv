@@ -119,6 +119,9 @@ public:
 	void query(const Matrix<2>& pos, const Matrix<2,2>& R, std::vector<std::pair<Matrix<2,1>, double>>& cvx, const int& cal_obstacles, const int& cal_environment, const int& cal_point, std::vector<std::pair<Matrix<2,1>, double>>& cvxprob);
 	double computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const std::vector<std::pair<Matrix<2>, double>>& cvxprob, const int& cal_obstacles, const int& cal_environment, const int& cal_point);
 	double boolprobsuccess(const int& cal_obstacles, const int& cal_environment, const int& cal_point, const Matrix<3,3>& initialCov);
+	void lqgmpTruncation(const Matrix<2*2>& x, const Matrix<2*2, 2*2>& S, const Matrix<4>& xDelta, const Matrix<4,4>& sDelta, std::vector<std::pair<Matrix<2,1>, double>>& cvx);
+
+
 };
 
 #endif

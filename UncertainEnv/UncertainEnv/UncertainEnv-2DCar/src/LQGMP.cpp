@@ -327,3 +327,8 @@ double LQGMP::boolprobsuccess(const int& cal_obstacles, const int& cal_environme
 	}
 	return probs;
 }
+
+void LQGMP::lqgmpTruncation(const Matrix<2*2>& x, const Matrix<2*2, 2*2>& S, const Matrix<4>& xDelta, const Matrix<4,4>& sDelta, std::vector<std::pair<Matrix<2,1>, double>>& cvx)
+{
+
+}

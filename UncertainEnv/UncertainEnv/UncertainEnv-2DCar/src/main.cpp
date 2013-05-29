@@ -219,23 +219,23 @@ int main()
 	rrt.setPlannerDefaults();
 	rrt.Plan_K_Seconds();
 	showPath(cal_rrt, rrt.pathSet[0]);
-	//rrt.showPath(cal_rrt);
+	rrt.showPath(cal_rrt);
 
-	//LQGMP lqgmp(rrt.pathSet[0], dt, P0);
-	//double prob = exp(lqgmp.computeProbability(P0, cal_obstacles, cal_environment, cal_point));
-	//lqgmp.draw_prior_distribution(cal_ellipse);
+	LQGMP lqgmp(rrt.pathSet[0], dt, P0);
+	double prob = exp(lqgmp.computeProbability(P0, cal_obstacles, cal_environment, cal_point));
+	lqgmp.draw_prior_distribution(cal_ellipse);
 
-	//double ps = lqgmp.boolprobsuccess(cal_obstacles, cal_environment, cal_point, P0);
-	//std::cout<<ps<<std::endl;
+	double ps = lqgmp.boolprobsuccess(cal_obstacles, cal_environment, cal_point, P0);
+	std::cout<<ps<<std::endl;
 
 
-	for(int i = 0; i < 10; i++){
-		Primitive collision;
-		collision.CreateVertex();
-		collision.CreateRandomSegs();
-		LQGMP lqgmp(rrt.pathSet[0], dt, P0);
-		lqgmp.LQGSimulate(P0, collision, cal_execute);
-	}
+	//for(int i = 0; i < 10; i++){
+	//	Primitive collision;
+	//	collision.CreateVertex();
+	//	collision.CreateRandomSegs();
+	//	LQGMP lqgmp(rrt.pathSet[0], dt, P0);
+	//	lqgmp.LQGSimulate(P0, collision, cal_execute);
+	//}
 
 
 	int num;

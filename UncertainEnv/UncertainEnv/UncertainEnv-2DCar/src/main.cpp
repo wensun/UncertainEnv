@@ -113,7 +113,7 @@ void initEnvironment()
 	CAL_SetGroupColor(cal_robot, 1, 0, 0);
 
 	CAL_CreateGroup(&cal_ellipse, 0, false, "Ellipse");
-	CAL_SetGroupColor(cal_ellipse, 0, 1, 0);
+	CAL_SetGroupColor(cal_ellipse, 0, 1, 0, 0.5);
 
 	CAL_CreateGroup(&cal_ellipse_trunc, 0, false, "Ellipse_trunc");
 	CAL_SetGroupColor(cal_ellipse_trunc, 1, 0, 0);
@@ -219,7 +219,7 @@ int main()
 	rrt.setPlannerDefaults();
 	rrt.Plan_K_Seconds();
 	showPath(cal_rrt, rrt.pathSet[0]);
-	rrt.showPath(cal_rrt);
+	//rrt.showPath(cal_rrt);
 
 	LQGMP lqgmp(rrt.pathSet[0], dt, P0);
 	double prob = exp(lqgmp.computeProbability(P0, cal_obstacles, cal_environment, cal_point));
@@ -228,6 +228,9 @@ int main()
 	double ps = lqgmp.boolprobsuccess(cal_obstacles, cal_environment, cal_point, P0);
 	std::cout<<ps<<std::endl;
 
+	double pstrunc = lqgmp.computeLQGMPTruncate(cal_obstacles, cal_environment, cal_point, P0);
+	std::cout<<pstrunc<<std::endl;
+	lqgmp.draw_truncate_distribution(cal_ellipse_trunc);
 
 	//for(int i = 0; i < 10; i++){
 	//	Primitive collision;

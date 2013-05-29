@@ -173,6 +173,7 @@ bool LQGMP::LQGSimulate(const Matrix<3,3>& initialCov, Primitive& PrimCollision,
 		x_est_d = x_est_d + pathlqg[i].K * (z - H * x_est_d);
 		x_true_old = x_true_new;
 	}
+	return true;
 }
 
 
@@ -253,7 +254,7 @@ void LQGMP::query(const Matrix<2>& pos, const Matrix<2,2>& R, std::vector<std::p
 }
 
 //compute the probablity of success for a step. there is no truncation.
-double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const std::vector<std::pair<Matrix<2>, double>>& cvxprob, const int& cal_obstacles, const int& cal_environment, const int& cal_point)
+double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const std::vector<std::pair<Matrix<2>, double>>& cvxprob)
 {
 	double ps = 0.0;
 	int cvxlen = (int)cvxprob.size();
@@ -322,21 +323,21 @@ double LQGMP::boolprobsuccess(const int& cal_obstacles, const int& cal_environme
 		cvx.clear(); cvxprob.clear();
 		query(pos, R, cvx, cal_obstacles, cal_environment, cal_point, cvxprob);
 
-		double stepp = computeStatics(pos, R, cvxprob, cal_obstacles, cal_environment, cal_point);
+		double stepp = computeStatics(pos, R, cvxprob);
 		probs *= stepp;
 	}
 	return probs;
 }
 
+
+//truncate the gaussian distribution. Current ignoring truncating the vertex in the environments
 void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std::pair<Matrix<2,1>, double>>& cvx)
 {
-	Matrix<6> xDelta; Matrix<6,6> sDelta;
-	double yMean, yVar, yNewMean, yNewVar;
-	Matrix<2*3> xyCovar, L;
+	Matrix<6> xDelta; 
+	Matrix<6,6> sDelta;
+	double yMean = 0, yVar = 0, yNewMean = 0, yNewVar = 0;
 	xDelta.reset();
 	sDelta.reset();
-
-	double ps = 1.0;
 
 	int ncvx = (int)cvx.size();
 	for(int i = 0; i < ncvx; i++){
@@ -398,5 +399,55 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 	}
 	X -= xDelta;
 	S -= sDelta;
-	
+}
+
+
+double LQGMP::computeLQGMPTruncate(const int& cal_obstacles, const int& cal_environment, const int& cal_point, const Matrix<3,3>& initialCov){
+
+	double ps = 1.0;
+	P0 = initialCov;
+	createABVLK();
+
+	Matrix<4,4> Q;
+	Q.reset();
+	Q.insert(0,0, M);
+	Q.insert(2,2, N);
+
+	pathlqg[0].y = zeros<6,1>();
+	pathlqg[0].R = zeros<6,6>(); pathlqg[0].R.insert<3,3>(0,0, P0);
+	Matrix<6> X = zeros<6,1>(); X.insert<3,1>(0,0, pathlqg[0].T); X.insert<3,1>(3,0, pathlqg[0].T);
+	X += pathlqg[0].y;
+	for(int i =1; i < (int)pathlqg.size(); i++){
+		Matrix<2> pos = X.subMatrix<2,1>(0,0);
+		Matrix<2,2> cov = pathlqg[i-1].R.subMatrix<2,2>(0,0);
+		
+		std::vector<std::pair<Matrix<2,1>, double>> cvx;
+		std::vector<std::pair<Matrix<2,1>, double>> cvxprob;
+		cvx.clear(); cvxprob.clear();
+		query(pos, cov, cvx, cal_obstacles, cal_environment, cal_point, cvxprob);
+		double ps_i = computeStatics(pos, cov, cvxprob); 
+		ps *= ps_i;
+
+		lqgmpTruncation(X, pathlqg[i-1].R, cvx);
+		Matrix<6> pathx = zeros<6,1>(); pathx.insert<3,1>(0,0, pathlqg[i-1].T); pathx.insert<3,1>(3,0, pathlqg[i-1].T);
+		pathlqg[i-1].y = X - pathx;
+
+		pathlqg[i].y = pathlqg[i-1].F * pathlqg[i-1].y;
+		pathlqg[i].R = pathlqg[i-1].F * pathlqg[i-1].R * ~pathlqg[i-1].F + pathlqg[i-1].G * Q * ~pathlqg[i-1].G;
+
+		Matrix<6> nextpathx  = zeros<6,1>(); nextpathx.insert<3,1>(0,0, pathlqg[i].T); nextpathx.insert<3,1>(3,0, pathlqg[i].T);
+		X = pathlqg[i].y + nextpathx;
+	}
+
+	return ps;
+}
+
+void LQGMP::draw_truncate_distribution(const int& cal_ellipse_trunc)
+{
+	for(int i = 0; i < (int)pathlqg.size(); i+=4){
+		Matrix<2> pathx = pathlqg[i].T.subMatrix<2,1>(0,0);
+		Matrix<2> pos = pathx + pathlqg[i].y.subMatrix<2,1>(0,0);
+		Matrix<2,2> Cov = pathlqg[i].R.subMatrix<2,2>(0,0);
+		drawEllipse2d(pos, Cov, cal_ellipse_trunc, false);
+	}
 }

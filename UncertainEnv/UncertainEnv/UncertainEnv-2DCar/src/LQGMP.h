@@ -117,11 +117,11 @@ public:
 
 	//truncation
 	void query(const Matrix<2>& pos, const Matrix<2,2>& R, std::vector<std::pair<Matrix<2,1>, double>>& cvx, const int& cal_obstacles, const int& cal_environment, const int& cal_point, std::vector<std::pair<Matrix<2,1>, double>>& cvxprob);
-	double computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const std::vector<std::pair<Matrix<2>, double>>& cvxprob, const int& cal_obstacles, const int& cal_environment, const int& cal_point);
+	double computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const std::vector<std::pair<Matrix<2>, double>>& cvxprob);
 	double boolprobsuccess(const int& cal_obstacles, const int& cal_environment, const int& cal_point, const Matrix<3,3>& initialCov);
 	void lqgmpTruncation( Matrix<2*3>& X,  Matrix<2*3, 2*3>& S, std::vector<std::pair<Matrix<2,1>, double>>& cvx);
-
-
+	double computeLQGMPTruncate(const int& cal_obstacles, const int& cal_environment, const int& cal_point, const Matrix<3,3>& initialCov);
+	void draw_truncate_distribution(const int& cal_ellipse_trunc);
 };
 
 #endif

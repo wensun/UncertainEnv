@@ -144,6 +144,37 @@ void LQGMP::draw_prior_distribution(const int& cal_ellipse){
 }
 
 
+bool LQGMP::LQGSimulate(const Matrix<3,3>& initialCov, Primitive& PrimCollision, const int& cal_lqg){
+	Dynamics dyn(dt);
+	P0 = initialCov;
+	createABVLK();
+
+	Matrix<3> x = pathlqg[0].T;
+	Matrix<3> x_true_old = x + sampleGaussian(zeros<3,1>(), P0);
+	Matrix<3> x_true_new = x_true_old;
+	Matrix<3> x_est_d = x - pathlqg[0].T;
+
+	for(int i = 1; i < (int)pathlqg.size(); i++){
+		Matrix<2> u = pathlqg[i-1].u + pathlqg[i-1].L*x_est_d;
+		x_true_new = dyn.dynamics_noise(x_true_old, u, sampleGaussian(zeros<2,1>(), M));
+
+		bool flag = false;
+		flag = PrimCollision.checkline(x_true_new.subMatrix<2,1>(0,0), x_true_old.subMatrix<2,1>(0,0));
+		if(flag == false){
+			std::cout<<"collision happen"<<std::endl;
+			return false;
+		}
+		float line[6] = {x_true_new[0], x_true_new[1], 0.0, x_true_old[0], x_true_old[1], 0.0};
+		int np[1] = {2};
+		CAL_CreatePolyline(cal_lqg, 1, np, line);
+
+		x_est_d = pathlqg[i-1].A * x_est_d + pathlqg[i-1].B * pathlqg[i-1].L * x_est_d;
+		Matrix<2> z = H * x_true_new - H * pathlqg[i].T + sampleGaussian(zeros<2,1>(), N);
+		x_est_d = x_est_d + pathlqg[i].K * (z - H * x_est_d);
+		x_true_old = x_true_new;
+	}
+}
+
 
 //truncation
 void LQGMP::query(const Matrix<2>& pos, const Matrix<2,2>& R, std::vector<std::pair<Matrix<2,1>, double>>& cvx, const int& cal_obstacles, const int& cal_environment, const int& cal_point, std::vector<std::pair<Matrix<2,1>, double>>& cvxprob)

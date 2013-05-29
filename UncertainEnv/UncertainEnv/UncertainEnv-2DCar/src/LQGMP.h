@@ -113,7 +113,7 @@ public:
 	double computeConfidence(const Matrix<2>& pos, const Matrix<2,2>& R, const int& cal_obstacles, const int& cal_environment, const int& cal_point);
 	double computeProbability(const Matrix<3,3>& initialCov, const int& cal_obstacles, const int& cal_environment, const int& cal_point);
 	void draw_prior_distribution(const int& cal_ellipse);
-	//bool LQGSimulate(const Matrix<3,3>& initialCov, const int& cal_obstacles, const int& cal_environment);
+	bool LQGSimulate(const Matrix<3,3>& initialCov,  Primitive& PrimCollision, const int& cal_lqg);
 
 	//truncation
 	void query(const Matrix<2>& pos, const Matrix<2,2>& R, std::vector<std::pair<Matrix<2,1>, double>>& cvx, const int& cal_obstacles, const int& cal_environment, const int& cal_point, std::vector<std::pair<Matrix<2,1>, double>>& cvxprob);

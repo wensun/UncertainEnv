@@ -328,7 +328,75 @@ double LQGMP::boolprobsuccess(const int& cal_obstacles, const int& cal_environme
 	return probs;
 }
 
-void LQGMP::lqgmpTruncation(const Matrix<2*2>& x, const Matrix<2*2, 2*2>& S, const Matrix<4>& xDelta, const Matrix<4,4>& sDelta, std::vector<std::pair<Matrix<2,1>, double>>& cvx)
+void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std::pair<Matrix<2,1>, double>>& cvx)
 {
+	Matrix<6> xDelta; Matrix<6,6> sDelta;
+	double yMean, yVar, yNewMean, yNewVar;
+	Matrix<2*3> xyCovar, L;
+	xDelta.reset();
+	sDelta.reset();
 
+	double ps = 1.0;
+
+	int ncvx = (int)cvx.size();
+	for(int i = 0; i < ncvx; i++){
+		Matrix<2> a = cvx[i].first;
+		double b = cvx[i].second;
+
+		int s = 0;
+		for(s = 0; s < (int)Prim.seg.size(); s++){
+			if(sqrt(tr(~(a-Prim.seg[s].a)*(a-Prim.seg[s].a))) + abs(b - Prim.seg[s].b) < 0.005)
+				break; //find the corresponding line segment. 
+		}
+		if(s < (int)Prim.seg.size()){ //means find the line segment
+			Primitive::segments ssegment = Prim.seg[s];
+			//start compute the approximated probablity of success.
+			Matrix<2,2> A = ssegment.RotationM;
+			Matrix<2,1> x = X.subMatrix<2,1>(0,0);
+			Matrix<2,1> p1 = ssegment.p1; Matrix<2,1> p2 = ssegment.p2;
+			Matrix<2,1> D = A*p1 - A*p2; Matrix<2,1> E = (~A)*x - 2*(~A)*p1 + A*p2;
+			Matrix<2,1> F = -(~A)*x + (~A)*p1;
+			double M = tr(~p1*~A*x) - tr(~p2*~A*x) - tr(~p1*~A*p1) + tr(~p2*~A*p1) - tr(~D*x)- tr(~E*p1) - tr(~F*p2);
+			Matrix<10,1> aa = zeros<10,1>();
+			aa.insert<2,1>(0,0,D); aa.insert<2,1>(6,0, E); aa.insert<2,1>(8,0, F);
+			double bb = -M;
+			Matrix<10,1> augmentX = zeros<10,1>(); augmentX.insert<6,1>(0,0,X); augmentX.insert<2,1>(6,0, p1); augmentX.insert<2,1>(8,0, p2);
+			Matrix<10,10> augmentCov = zeros<10,10>(); augmentCov.insert<6,6>(0,0,S); augmentCov.insert<2,2>(6,6, ssegment.S1); augmentCov.insert<2,2>(8,8, ssegment.S2);
+			yMean = tr(~aa*augmentX);
+			yVar = tr(~aa*augmentCov*aa);
+			truncate(bb, yMean, yVar, yNewMean, yNewVar);
+			Matrix<10,1> L = augmentCov*aa / tr(~aa*augmentCov*aa);
+			xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
+			sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+		}
+		else if(s == (int)Prim.seg.size()){
+			//search for vertex;
+			int v = 0;
+			for(v = 0; v < (int)Prim.points.size(); v++){
+				Matrix<2,1> contact = Prim.points[v].first;
+				if(abs(tr(~a*contact)-b) < 0.005)
+					break; //find the vertex as the contact point.
+			}
+			if(v < (int)Prim.points.size()){
+				Matrix<2,1> c = Prim.points[v].first;
+				Matrix<2,2> ccov = Prim.points[v].second;
+				Matrix<2,1> x = X.subMatrix<2,1>(0,0);
+				Matrix<2> D = 2*c - 2*x; Matrix<2> E = 2*x - 2*c;
+				double M = 2*tr(~c*x) - tr(~x*x) - tr(~c*c) - tr(~D*x) - tr(~E*c);
+				Matrix<8,1> aa = zeros<8,1>(); aa.insert<2,1>(0,0,D); aa.insert<2,1>(6,0, E);
+				double bb = -M;
+				Matrix<8,1> augmentX = zeros<8,1>(); augmentX.insert<6,1>(0,0, X); augmentX.insert<2,1>(6,0, c);
+				Matrix<8,8> augmentCov = zeros<8,8>(); augmentCov.insert<6,6>(0,0, S); augmentCov.insert<2,2>(6,6, ccov);
+				yMean = tr(~aa*augmentX);
+				yVar = tr(~aa*augmentCov*aa);
+				truncate(bb, yMean, yVar, yNewMean, yNewVar);
+				Matrix<8,1> L = augmentCov*aa / yVar;
+				xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
+				sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+			}
+		}
+	}
+	X -= xDelta;
+	S -= sDelta;
+	
 }

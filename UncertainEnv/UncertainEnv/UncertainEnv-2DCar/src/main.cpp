@@ -124,7 +124,7 @@ void initEnvironment(Primitive& PRIM)
 	CAL_SetGroupColor(cal_plan, 0, 1, 0);
 
 	CAL_CreateGroup(&cal_execute, 0, false, "execute");
-	CAL_SetGroupColor(cal_execute, 0, 1, 0);
+	CAL_SetGroupColor(cal_execute, 0, 0, 1);
 	
 	CAL_CreateGroup(&cal_goal, 0, false, "Goal region");
 	CAL_SetGroupColor(cal_goal, 0, 1, 1, 0.5);
@@ -143,7 +143,7 @@ void uncertainEnv()
 {
 	Primitive prim;
 	for(int i = 0; i < 10; i++){
-		prim.CreateVertex();
+		prim.CreateRandomVertex();
 		float line[6] = {prim.randomvertex[0][0], prim.randomvertex[0][1], 0, prim.randomvertex[1][0], prim.randomvertex[1][1], 0};
 		int np[1] = {2};
 		CAL_CreatePolyline(cal_line, 1, np, line);
@@ -237,13 +237,16 @@ int main()
 	std::cout<<pstrunc<<std::endl;
 	lqgmp.draw_truncate_distribution(cal_ellipse_trunc);
 
-	//for(int i = 0; i < 10; i++){
-	//	Primitive collision;
-	//	collision.CreateVertex();
-	//	collision.CreateRandomSegs();
-	//	LQGMP lqgmp(rrt.pathSet[0], dt, P0);
-	//	lqgmp.LQGSimulate(P0, collision, cal_execute);
-	//}
+	int count = 0;
+	for(int i = 0; i < 1000; i++){
+		Primitive collision;
+		collision.CreateRandomVertex();
+		collision.CreateRandomSegs();
+		LQGMP lqgmp(rrt.pathSet[0], dt, P0, collision, cal_obstacles);
+		if(lqgmp.LQGSimulate(P0, collision, cal_execute) == true)
+			count ++;
+	}
+	std::cout<<count*1.0 / 1000<<std::endl;
 
 
 	int num;

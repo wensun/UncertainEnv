@@ -161,7 +161,7 @@ bool LQGMP::LQGSimulate(const Matrix<3,3>& initialCov, Primitive& PrimCollision,
 		bool flag = false;
 		flag = PrimCollision.checkline(x_true_new.subMatrix<2,1>(0,0), x_true_old.subMatrix<2,1>(0,0));
 		if(flag == false){
-			std::cout<<"collision happen"<<std::endl;
+			//std::cout<<"collision happen"<<std::endl;
 			return false;
 		}
 		float line[6] = {x_true_new[0], x_true_new[1], 0.0, x_true_old[0], x_true_old[1], 0.0};

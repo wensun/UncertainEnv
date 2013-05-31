@@ -79,17 +79,16 @@ public:
 	double r;
 	double phimax;
 	double vmax;
-
+	int cal_obstacles;
 
 	LQGMP(){};
-	LQGMP(const std::vector<RRT::PathNode>& rawpath, const double& timestep, const Matrix<3,3>& initialCov){
+	LQGMP(const std::vector<RRT::PathNode>& rawpath, const double& timestep, const Matrix<3,3>& initialCov, Primitive& pm, const int& cal_obs){
 		//m_rrtpath.clear();
 		m_rrtpath = rawpath;
 		dt = timestep;
 		P0 = initialCov;
-
-		Primitive pri;
-		Prim = pri;
+		
+		Prim = pm;
 
 		int size = (int)m_rrtpath.size();
 		pathlqg.clear();
@@ -106,6 +105,8 @@ public:
 
 		Dynamics dy(dt);
 		r = dy.r; vmax = dy.vmax; phimax = dy.phimax;
+
+		cal_obstacles = cal_obs;
 	}
 
 	void createABVLK();

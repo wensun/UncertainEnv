@@ -29,6 +29,8 @@ public:
 		Matrix<2,2> S1;
 		Matrix<2> p2;
 		Matrix<2,2> S2;
+		int index1;
+		int index2;
 		Matrix<2,2> RotationM;
 
 		segments(){
@@ -38,6 +40,8 @@ public:
 			p2 = zeros<2,1>();
 			S1 =zeros<2,2>();
 			S2 = zeros<2,2>();
+			index1 = 0;
+			index2 = 0;
 			RotationM = zeros<2,2>();
 		}
 	};
@@ -135,24 +139,28 @@ public:
 		len = sqrt(tr(~a*a));
 		segments line;
 		line.a = a/len; line.b = b/len; line.p1 = vertex[0]; line.p2 = vertex[1];
+		line.index1 = 0; line.index2 = 1;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[1] - vertex[2]);
 		b = tr(~a * vertex[1]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[1]; line.p2 = vertex[2];
+		line.index1 = 1; line.index2 = 2;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[2] - vertex[3]);
 		b = tr(~a * vertex[2]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[2]; line.p2 = vertex[3];
+		line.index1 = 2; line.index2 = 3;
 		randomseg.push_back(line);
 		
 		a = rotation * (vertex[3] - vertex[0]);
 		b = tr(~a * vertex[3]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[3]; line.p2 = vertex[0];
+		line.index1 = 3; line.index2 = 0;
 		randomseg.push_back(line);
 
 
@@ -163,42 +171,49 @@ public:
 		b = tr(~a * vertex[4]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[4]; line.p2 = vertex[5];
+		line.index1 = 4; line.index2 = 5;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[5] - vertex[6]);
 		b = tr(~a * vertex[5]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[5]; line.p2 = vertex[6];
+		line.index1 = 5; line.index2 = 6;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[6] - vertex[7]);
 		b = tr(~a * vertex[6]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[6]; line.p2 = vertex[7];
+		line.index1 = 6; line.index2 = 7;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[7] - vertex[4]);
 		b = tr(~a * vertex[7]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[7]; line.p2 = vertex[4];
+		line.index1 = 7; line.index2 = 4;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[8] - vertex[9]);
 		b = tr(~a * vertex[8]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[8]; line.p2 = vertex[9];
+		line.index1 = 8; line.index2 = 9;
 		randomseg.push_back(line);
 
 		a = rotation * (vertex[10] - vertex[8]);
 		b = tr(~a * vertex[8]);
 		len = sqrt(tr(~a*a));
 		line.a = a/len; line.b = b/len; line.p1 = vertex[10]; line.p2 = vertex[8];
+		line.index1 = 10; line.index2 = 8;
 		randomseg.push_back(line);
 	}
 
 	void CreateSegments()
 	{
 		//CreateVertex();
+		seg.clear();
 		Matrix<2,2> rotation = zeros<2,2>();
 		rotation(0, 1) = 1;
 		rotation(1,0) = -1;
@@ -217,6 +232,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[0]; line.p2 = vertex[1];
 		line.S1 = points[0].second; line.S2 = points[1].second;
 		line.RotationM = rotation;
+		line.index1 = 0; line.index2 = 1;
 		seg.push_back(line);
 
 		a = rotation * (vertex[1] - vertex[2]);
@@ -225,6 +241,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[1]; line.p2 = vertex[2];
 		line.S1 = points[1].second; line.S2 = points[2].second;
 		line.RotationM = rotation;
+		line.index1 = 1; line.index2 = 2;
 		seg.push_back(line);
 
 		a = rotation * (vertex[2] - vertex[3]);
@@ -233,6 +250,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[2]; line.p2 = vertex[3];
 		line.S1 = points[2].second; line.S2 = points[3].second;
 		line.RotationM = rotation;
+		line.index1 = 2; line.index2 = 3;
 		seg.push_back(line);
 		
 		a = rotation * (vertex[3] - vertex[0]);
@@ -241,6 +259,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[3]; line.p2 = vertex[0];
 		line.S1 = points[3].second; line.S2 = points[0].second;
 		line.RotationM = rotation;
+		line.index1 = 3; line.index2 = 0;
 		seg.push_back(line);
 
 
@@ -253,6 +272,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[4]; line.p2 = vertex[5];
 		line.S1 = points[4].second; line.S2 = points[5].second;
 		line.RotationM = rotation;
+		line.index1 = 4; line.index2 = 5;
 		seg.push_back(line);
 
 		a = rotation * (vertex[5] - vertex[6]);
@@ -261,6 +281,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[5]; line.p2 = vertex[6];
 		line.S1 = points[5].second; line.S2 = points[6].second;
 		line.RotationM = rotation;
+		line.index1 = 5; line.index2 = 6;
 		seg.push_back(line);
 
 		a = rotation * (vertex[6] - vertex[7]);
@@ -269,6 +290,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[6]; line.p2 = vertex[7];
 		line.S1 = points[6].second; line.S2 = points[7].second;
 		line.RotationM = rotation;
+		line.index1 = 6; line.index2 = 7;
 		seg.push_back(line);
 
 		a = rotation * (vertex[7] - vertex[4]);
@@ -277,6 +299,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[7]; line.p2 = vertex[4];
 		line.S1 = points[7].second; line.S2 = points[4].second;
 		line.RotationM = rotation;
+		line.index1 = 7; line.index2 = 4;
 		seg.push_back(line);
 
 		a = rotation * (vertex[8] - vertex[9]);
@@ -285,6 +308,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[8]; line.p2 = vertex[9];
 		line.S1 = points[8].second; line.S2 = points[9].second;
 		line.RotationM = rotation;
+		line.index1 = 8; line.index2 = 9;
 		seg.push_back(line);
 
 		a = rotation * (vertex[10] - vertex[8]);
@@ -293,6 +317,7 @@ public:
 		line.a = a/len; line.b = b/len; line.p1 = vertex[10]; line.p2 = vertex[8];
 		line.S1 = points[10].second; line.S2 = points[8].second;
 		line.RotationM = rotation;
+		line.index1 = 10; line.index2 = 8;
 		seg.push_back(line);
 
 	}
@@ -338,6 +363,52 @@ public:
 				return false;
 		}
 		return true;
+	}
+
+
+	void CreateObstacles(const int& cal_obstacles)
+	{
+		CAL_EmptyGroup(cal_obstacles);
+
+		Matrix<2> Corner1 = zeros<2,1>(); Corner1[0] = -0.5; Corner1[1] = 6.5;
+		Matrix<2> Corner2 = zeros<2,1>(); Corner2[0] = 5.5; Corner2[1] = 6.5;
+		Matrix<2> Corner3 = zeros<2,1>(); Corner3[0] = 5.5; Corner3[1] = -0.5;
+		Matrix<2> Corner4 = zeros<2,1>(); Corner4[0] = -0.5; Corner4[1] = -0.5;
+
+		std::cout<<points[1].first[1]<<std::endl;
+		std::cout<<points[0].first[1]<<std::endl;
+
+		float p1[12] = {Corner1[0], Corner1[1], 0.0, Corner2[0], Corner2[1], 0.0, points[1].first[0], points[1].first[1], 0.0, points[0].first[0], points[0].first[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p1);
+
+		float p2[12] = {Corner2[0], Corner2[1], 0.0, points[1].first[0], points[1].first[1], 0.0, points[2].first[0], points[2].first[1], 0.0, Corner3[0], Corner3[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p2);
+
+		float p3[12] = {Corner3[0], Corner3[1], 0.0, points[2].first[0], points[2].first[1], 0.0, points[3].first[0], points[3].first[1], 0.0, Corner4[0], Corner4[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p3);
+
+		float p4[12] = {points[3].first[0], points[3].first[1], 0.0, Corner4[0], Corner4[1], 0.0, Corner1[0], Corner1[1], 0.0, points[0].first[0], points[0].first[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p4);
+
+		float p5[12] = {points[4].first[0], points[4].first[1], 0.0, points[5].first[0], points[5].first[1], 0.0, points[6].first[0], points[6].first[1], 0.0, points[7].first[0], points[7].first[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p5);
+
+		float p6[12] = {points[8].first[0], points[8].first[1], 0.0, points[9].first[0], points[9].first[1], 0.0, points[2].first[0], points[2].first[1], 0.0, points[10].first[0], points[10].first[1], 0.0};
+		CAL_CreatePolygon(cal_obstacles, 4, p6);
+	}
+	
+
+	void UpdateEnvironment(const std::vector<std::pair<Matrix<2>, Matrix<2,2>>>& tmppoints, const int& cal_obstacles)
+	{
+		points.clear();
+		points.resize(11);
+		for(int i = 0; i < (int)tmppoints.size(); i++){
+			points[i].first = tmppoints[i].first;
+			points[i].second = tmppoints[i].second;
+		}
+		std::cout<<"ppp "<<points.size()<<std::endl;
+		CreateObstacles(cal_obstacles);
+		CreateSegments();
 	}
 
 };

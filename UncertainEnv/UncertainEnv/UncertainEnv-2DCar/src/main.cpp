@@ -77,7 +77,7 @@ double Random()
 }
 
 /**********************init environment***************************/
-void initEnvironment() 
+void initEnvironment(Primitive& PRIM) 
 {
 	goal[0] = 4.5;
 	goal[1] = 3;
@@ -85,18 +85,20 @@ void initEnvironment()
 	start[0] = 0.5; start[1] = 0.5; start[2] = 1.0/2.0 * M_PI;
 	P0 = identity<3>() * 0.001;
 	// callisto params
-	CAL_SetViewParams(0, 0, 0, 14, 0, 0, 0, 0, 1, 0); 
+	CAL_SetViewParams(0, 2.5, 3, 10, 2.5, 3, 0, 0, 1, 0); 
 
 	CAL_CreateGroup(&cal_environment, 0, true, "Environment");
 	CAL_CreateGroup(&cal_obstacles, cal_environment, true, "Obstacles");
-	CAL_SetGroupColor(cal_obstacles, 1, 0, 0, 0.5);
+	CAL_SetGroupColor(cal_obstacles, 1, 0, 0, 1);
 
-	CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, -0.25, 3, 0); 	
-	CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, 5.25, 3, 0);
-	CAL_CreateBox(cal_obstacles, 6, 0.5, 0.2, 2.5, 6.25, 0);
-	CAL_CreateBox(cal_obstacles, 6, 0.5, 0.2, 2.5, -0.25, 0);
-	CAL_CreateBox(cal_obstacles, 2, 4, 0.2, 2, 3, 0);
-	CAL_CreateBox(cal_obstacles, 1, 2, 0.2, 4.5, 1,0);
+	//CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, -0.25, 3, 0); 	
+	//CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, 5.25, 3, 0);
+	//CAL_CreateBox(cal_obstacles, 6, 0.5, 0.2, 2.5, 6.25, 0);
+	//CAL_CreateBox(cal_obstacles, 6, 0.5, 0.2, 2.5, -0.25, 0);
+	//CAL_CreateBox(cal_obstacles, 2, 4, 0.2, 2, 3, 0);
+	//CAL_CreateBox(cal_obstacles, 1, 2, 0.2, 4.5, 1,0);
+	PRIM.CreateObstacles(cal_obstacles);
+	
 	CAL_CreateGroup(&cal_rrt, 0, false, "RRT");
 	CAL_SetGroupColor(cal_rrt, 1, 0, 1);
 	
@@ -206,8 +208,11 @@ int main()
 
 	srand(1000);
 	
-	CAL_Initialisation (true, true, true);
-	initEnvironment();
+	Primitive PRIM;
+	PRIM.CreateSegments();
+
+	CAL_Initialisation (true, true, false);
+	initEnvironment(PRIM);
 	uncertainEnv();
 
 	double plantime = 2;
@@ -221,7 +226,7 @@ int main()
 	showPath(cal_rrt, rrt.pathSet[0]);
 	//rrt.showPath(cal_rrt);
 
-	LQGMP lqgmp(rrt.pathSet[0], dt, P0);
+	LQGMP lqgmp(rrt.pathSet[0], dt, P0, PRIM, cal_obstacles);
 	double prob = exp(lqgmp.computeProbability(P0, cal_obstacles, cal_environment, cal_point));
 	lqgmp.draw_prior_distribution(cal_ellipse);
 

@@ -138,7 +138,7 @@ double LQGMP::computeProbability(const Matrix<3,3>& initialCov, const int& cal_o
 void LQGMP::draw_prior_distribution(const int& cal_ellipse){
 
 	//createABVLK();
-	for(int i = 0; i < (int)pathlqg.size(); i+=4){
+	for(int i = 0; i < (int)pathlqg.size(); i+=3){
 		drawEllipse2d(pathlqg[i].T.subMatrix<2,1>(0,0), pathlqg[i].Sigma.subMatrix<2,2>(0,0), cal_ellipse, false);
 	}
 }
@@ -264,7 +264,7 @@ double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const s
 
 		int s = 0;
 		for(s = 0; s < (int)Prim.seg.size(); s++){
-			if(sqrt(tr(~(a-Prim.seg[s].a)*(a-Prim.seg[s].a))) + abs(b - Prim.seg[s].b) < 0.005)
+			if(sqrt(tr(~(a-Prim.seg[s].a)*(a-Prim.seg[s].a))) + abs(b - Prim.seg[s].b) < 0.0005)
 				break; //find the corresponding line segment. 
 		}
 		if(s < (int)Prim.seg.size()){ //means find the line segment
@@ -286,7 +286,7 @@ double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const s
 			int v = 0;
 			for(v = 0; v < (int)Prim.points.size(); v++){
 				Matrix<2,1> contact = Prim.points[v].first;
-				if(abs(tr(~a*contact)-b) < 0.005)
+				if(abs(tr(~a*contact)-b) < 0.0005)
 					break; //find the vertex as the contact point.
 			}
 			if(v < (int)Prim.points.size()){
@@ -323,7 +323,8 @@ double LQGMP::boolprobsuccess(const int& cal_obstacles, const int& cal_environme
 		cvx.clear(); cvxprob.clear();
 		query(pos, R, cvx, cal_obstacles, cal_environment, cal_point, cvxprob);
 
-		double stepp = computeStatics(pos, R, cvxprob);
+		//double stepp = computeStatics(pos, R, cvxprob);
+		double stepp = computeStatics(pos, R, cvx);
 		probs *= stepp;
 	}
 	return probs;
@@ -339,6 +340,15 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 	xDelta.reset();
 	sDelta.reset();
 
+	std::vector<std::pair<Matrix<2>, Matrix<2,2>>> tmppoints;
+	tmppoints.clear();
+	tmppoints.resize((int)Prim.points.size());
+	for(int i = 0; i < (int)Prim.points.size(); i++){
+		tmppoints[i].first = Prim.points[i].first;
+		tmppoints[i].second = Prim.points[i].second;
+	}
+
+
 	int ncvx = (int)cvx.size();
 	for(int i = 0; i < ncvx; i++){
 		Matrix<2> a = cvx[i].first;
@@ -346,10 +356,11 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 
 		int s = 0;
 		for(s = 0; s < (int)Prim.seg.size(); s++){
-			if(sqrt(tr(~(a-Prim.seg[s].a)*(a-Prim.seg[s].a))) + abs(b - Prim.seg[s].b) < 0.005)
+			if(sqrt(tr(~(a-Prim.seg[s].a)*(a-Prim.seg[s].a))) + abs(b - Prim.seg[s].b) < 0.0001)
 				break; //find the corresponding line segment. 
 		}
 		if(s < (int)Prim.seg.size()){ //means find the line segment
+			//std::cout<<"aaaa"<<std::endl;
 			Primitive::segments ssegment = Prim.seg[s];
 			//start compute the approximated probablity of success.
 			Matrix<2,2> A = ssegment.RotationM;
@@ -366,16 +377,23 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 			yMean = tr(~aa*augmentX);
 			yVar = tr(~aa*augmentCov*aa);
 			truncate(bb, yMean, yVar, yNewMean, yNewVar);
-			Matrix<10,1> L = augmentCov*aa / tr(~aa*augmentCov*aa);
+			Matrix<10,1> L = augmentCov*aa / yVar;
 			xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
 			sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+
+			int index1 = ssegment.index1; int index2 = ssegment.index2;
+			tmppoints[index1].first -= xDelta.subMatrix<2,1>(6,0);
+			tmppoints[index2].first -= xDelta.subMatrix<2,1>(8,0);
+			tmppoints[index1].second -= sDelta.subMatrix<2,2>(6,6);
+			tmppoints[index2].second -= sDelta.subMatrix<2,2>(8,8);
+
 		}
 		else if(s == (int)Prim.seg.size()){
 			//search for vertex;
 			int v = 0;
 			for(v = 0; v < (int)Prim.points.size(); v++){
 				Matrix<2,1> contact = Prim.points[v].first;
-				if(abs(tr(~a*contact)-b) < 0.005)
+				if(abs(tr(~a*contact)-b) < 0.0001)
 					break; //find the vertex as the contact point.
 			}
 			if(v < (int)Prim.points.size()){
@@ -394,11 +412,15 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 				Matrix<8,1> L = augmentCov*aa / yVar;
 				xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
 				sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+
+				tmppoints[v].first -= xDelta.subMatrix<2,1>(6,0);
+				tmppoints[v].second -= sDelta.subMatrix<2,2>(6,6);
 			}
 		}
 	}
 	X -= xDelta;
 	S -= sDelta;
+	Prim.UpdateEnvironment(tmppoints, cal_obstacles);
 }
 
 
@@ -425,7 +447,8 @@ double LQGMP::computeLQGMPTruncate(const int& cal_obstacles, const int& cal_envi
 		std::vector<std::pair<Matrix<2,1>, double>> cvxprob;
 		cvx.clear(); cvxprob.clear();
 		query(pos, cov, cvx, cal_obstacles, cal_environment, cal_point, cvxprob);
-		double ps_i = computeStatics(pos, cov, cvxprob); 
+		//double ps_i = computeStatics(pos, cov, cvxprob); 
+		double ps_i = computeStatics(pos, cov, cvx);
 		ps *= ps_i;
 
 		lqgmpTruncation(X, pathlqg[i-1].R, cvx);
@@ -444,7 +467,7 @@ double LQGMP::computeLQGMPTruncate(const int& cal_obstacles, const int& cal_envi
 
 void LQGMP::draw_truncate_distribution(const int& cal_ellipse_trunc)
 {
-	for(int i = 0; i < (int)pathlqg.size(); i+=4){
+	for(int i = 0; i < (int)pathlqg.size(); i+=3){
 		Matrix<2> pathx = pathlqg[i].T.subMatrix<2,1>(0,0);
 		Matrix<2> pos = pathx + pathlqg[i].y.subMatrix<2,1>(0,0);
 		Matrix<2,2> Cov = pathlqg[i].R.subMatrix<2,2>(0,0);

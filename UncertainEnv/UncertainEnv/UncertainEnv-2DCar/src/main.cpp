@@ -89,7 +89,7 @@ void initEnvironment(Primitive& PRIM)
 
 	CAL_CreateGroup(&cal_environment, 0, true, "Environment");
 	CAL_CreateGroup(&cal_obstacles, cal_environment, true, "Obstacles");
-	CAL_SetGroupColor(cal_obstacles, 1, 0, 0, 1);
+	CAL_SetGroupColor(cal_obstacles, 1, 0, 0, 0.8);
 
 	//CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, -0.25, 3, 0); 	
 	//CAL_CreateBox(cal_obstacles, 0.5, 6, 0.2, 5.25, 3, 0);

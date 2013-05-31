@@ -340,14 +340,6 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 	xDelta.reset();
 	sDelta.reset();
 
-	std::vector<std::pair<Matrix<2>, Matrix<2,2>>> tmppoints;
-	tmppoints.clear();
-	tmppoints.resize((int)Prim.points.size());
-	for(int i = 0; i < (int)Prim.points.size(); i++){
-		tmppoints[i].first = Prim.points[i].first;
-		tmppoints[i].second = Prim.points[i].second;
-	}
-
 
 	int ncvx = (int)cvx.size();
 	for(int i = 0; i < ncvx; i++){
@@ -378,14 +370,16 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 			yVar = tr(~aa*augmentCov*aa);
 			truncate(bb, yMean, yVar, yNewMean, yNewVar);
 			Matrix<10,1> L = augmentCov*aa / yVar;
-			xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
-			sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+			Matrix<10,1> xDeviation = L*(yMean - yNewMean);
+			Matrix<10,10> SDeviation = (yVar - yNewVar)*(L*~L);
+			xDelta += xDeviation.subMatrix<6,1>(0,0);
+			sDelta += SDeviation.subMatrix<6,6>(0,0);
 
 			int index1 = ssegment.index1; int index2 = ssegment.index2;
-			tmppoints[index1].first -= xDelta.subMatrix<2,1>(6,0);
-			tmppoints[index2].first -= xDelta.subMatrix<2,1>(8,0);
-			tmppoints[index1].second -= sDelta.subMatrix<2,2>(6,6);
-			tmppoints[index2].second -= sDelta.subMatrix<2,2>(8,8);
+			Prim.tmppoints[index1].first -= xDeviation.subMatrix<2,1>(6,0);
+			Prim.tmppoints[index2].first -= xDeviation.subMatrix<2,1>(8,0);
+			Prim.tmppoints[index1].second -= SDeviation.subMatrix<2,2>(6,6);
+			Prim.tmppoints[index2].second -= SDeviation.subMatrix<2,2>(8,8);
 
 		}
 		else if(s == (int)Prim.seg.size()){
@@ -410,17 +404,19 @@ void LQGMP::lqgmpTruncation(Matrix<2*3>& X, Matrix<2*3, 2*3>& S, std::vector<std
 				yVar = tr(~aa*augmentCov*aa);
 				truncate(bb, yMean, yVar, yNewMean, yNewVar);
 				Matrix<8,1> L = augmentCov*aa / yVar;
-				xDelta += (L*(yMean - yNewMean)).subMatrix<6,1>(0,0);
-				sDelta += ((yVar - yNewVar)*(L*~L)).subMatrix<6,6>(0,0);
+				Matrix<8,1> xDeviation = L*(yMean - yNewMean);
+				Matrix<8,8> SDeviation = (yVar - yNewVar)*(L*~L);
+				xDelta += xDeviation.subMatrix<6,1>(0,0);
+				sDelta += SDeviation.subMatrix<6,6>(0,0);
 
-				tmppoints[v].first -= xDelta.subMatrix<2,1>(6,0);
-				tmppoints[v].second -= sDelta.subMatrix<2,2>(6,6);
+				Prim.tmppoints[v].first -= xDeviation.subMatrix<2,1>(6,0);
+				Prim.tmppoints[v].second -= SDeviation.subMatrix<2,2>(6,6);
 			}
 		}
 	}
 	X -= xDelta;
 	S -= sDelta;
-	Prim.UpdateEnvironment(tmppoints, cal_obstacles);
+	Prim.UpdateEnvironment(cal_obstacles);
 }
 
 
@@ -472,5 +468,9 @@ void LQGMP::draw_truncate_distribution(const int& cal_ellipse_trunc)
 		Matrix<2> pos = pathx + pathlqg[i].y.subMatrix<2,1>(0,0);
 		Matrix<2,2> Cov = pathlqg[i].R.subMatrix<2,2>(0,0);
 		drawEllipse2d(pos, Cov, cal_ellipse_trunc, false);
+	}
+
+	for(int i = 0; i < (int)Prim.points.size(); i++){
+		std::cout<<i<<": ("<<Prim.points[i].first[0]<<" "<<Prim.points[i].first[1]<<")"<<std::endl;	
 	}
 }

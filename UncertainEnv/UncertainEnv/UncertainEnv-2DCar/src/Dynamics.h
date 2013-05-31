@@ -32,7 +32,7 @@ public:
 	Dynamics(const double& dt){
 		r = 0.35;
 		tau = dt;
-		vmax = 1.0;
+		vmax = 0.5;
 		phimax = 3.14159 / 3;
 	}
 

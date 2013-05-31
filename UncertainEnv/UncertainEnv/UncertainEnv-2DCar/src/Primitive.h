@@ -47,6 +47,7 @@ public:
 	};
 
 	std::vector<std::pair<Matrix<2>, Matrix<2,2>>> points;   //pair: mean and Covariance.
+	std::vector<std::pair<Matrix<2>, Matrix<2,2>>> tmppoints;
 	std::vector<segments> seg;
 	std::vector<Matrix<2>> randomvertex;
 	std::vector<segments> randomseg;
@@ -54,55 +55,69 @@ public:
 	Primitive(){
 		num = 11;
 		points.resize(num);
+		tmppoints.resize(num);
 		seg.clear();
 		randomseg.clear();
 		randomvertex.clear();
 
 		Matrix<2> p1 = zeros<2,1>(); p1(0,0) = 0; p1(1,0) = 6;
-		Matrix<2,2> S1 = 0.03 * identity<2>();
+		//Matrix<2,2> S1 = 0.03 * identity<2>();
+		Matrix<2,2> S1 = 0.005 * identity<2>();
+		
 		points[0] = std::make_pair(p1, S1);
 
 		Matrix<2> p2 = zeros<2,1>(); p2(0,0) = 5; p2(1,0) = 6;
-		Matrix<2,2> S2 = 0.03 * identity<2>();
+		//Matrix<2,2> S2 = 0.03 * identity<2>();
+		Matrix<2,2> S2 = 0.005 * identity<2>();
 		points[1] = std::make_pair(p2, S2);
 
 		Matrix<2> p3 = zeros<2,1>(); p3(0,0) = 5; p3(1,0) = 0;
-		Matrix<2,2> S3 = 0.01 * identity<2>();
+		//Matrix<2,2> S3 = 0.01 * identity<2>();
+		Matrix<2,2> S3 = 0.003 * identity<2>();	
 		points[2] = std::make_pair(p3, S3);
 
 		Matrix<2> p4 = zeros<2,1>(); p4(0,0) = 0; p4(1,0) = 0;
-		Matrix<2,2> S4 = 0.01 * identity<2>();
+		//Matrix<2,2> S4 = 0.01 * identity<2>();
+		Matrix<2,2> S4 = 0.001 * identity<2>();	
 		points[3] = std::make_pair(p4, S4);
 
 		Matrix<2> p5 = zeros<2,1>(); p5(0,0) = 1; p5(1,0) = 5;
-		Matrix<2,2> S5 = 0.005 * identity<2>();
+		//Matrix<2,2> S5 = 0.005 * identity<2>();
+		Matrix<2,2> S5 = 0.002 * identity<2>();	
 		points[4] = std::make_pair(p5, S5);
 		
 		Matrix<2> p6 = zeros<2,1>(); p6(0,0) = 3; p6(1,0) = 5;
-		Matrix<2,2> S6 = 0.005 * identity<2>();
+		//Matrix<2,2> S6 = 0.005 * identity<2>();
+		Matrix<2,2> S6 = 0.005 * identity<2>();	
 		points[5] = std::make_pair(p6, S6);
 
 		Matrix<2> p7 = zeros<2,1>(); p7(0,0) = 3; p7(1,0) = 1;
-		Matrix<2,2> S7 = 0.01 * identity<2>();
+		//Matrix<2,2> S7 = 0.01 * identity<2>();
+		Matrix<2,2> S7 = 0.001 * identity<2>();
 		points[6] = std::make_pair(p7, S7);
 
 		Matrix<2> p8 = zeros<2,1>(); p8(0,0) = 1; p8(1,0) = 1;
-		Matrix<2,2> S8 = 0.01 * identity<2>();
+		//Matrix<2,2> S8 = 0.01 * identity<2>();
+		Matrix<2,2> S8 = 0.001 * identity<2>();
 		points[7] = std::make_pair(p8, S8);
 
 		Matrix<2> p9 = zeros<2,1>(); p9(0,0) = 4; p9(1,0) = 2;
-		Matrix<2,2> S9 = 0.02 * identity<2>();
+		//Matrix<2,2> S9 = 0.02 * identity<2>();
+		Matrix<2,2> S9 = 0.001 * identity<2>();
 		points[8] = std::make_pair(p9, S9);
 
 		Matrix<2> p10 = zeros<2,1>(); p10(0,0) = 5; p10(1,0) = 2;
-		Matrix<2,2> S10 = 0.001 * identity<2>();
-		S10(0,0) = 0; //no uncertainty in the x direction.
+		//Matrix<2,2> S10 = 0.001 * identity<2>();
+		//S10(0,0) = 0; //no uncertainty in the x direction.
+		Matrix<2,2> S10 = 0.001 * identity<2>();		
 		points[9] = std::make_pair(p10, S10);
 
 		Matrix<2> p11 = zeros<2,1>(); p11(0,0) = 4; p11(1,0) = 0;
 		Matrix<2,2> S11 = 0.001 * identity<2>();
 		S11(1,1) = 0;
 		points[10] = std::make_pair(p11, S11);
+
+		tmppoints = points;
 
 	}
 	
@@ -375,9 +390,6 @@ public:
 		Matrix<2> Corner3 = zeros<2,1>(); Corner3[0] = 5.5; Corner3[1] = -0.5;
 		Matrix<2> Corner4 = zeros<2,1>(); Corner4[0] = -0.5; Corner4[1] = -0.5;
 
-		std::cout<<points[1].first[1]<<std::endl;
-		std::cout<<points[0].first[1]<<std::endl;
-
 		float p1[12] = {Corner1[0], Corner1[1], 0.0, Corner2[0], Corner2[1], 0.0, points[1].first[0], points[1].first[1], 0.0, points[0].first[0], points[0].first[1], 0.0};
 		CAL_CreatePolygon(cal_obstacles, 4, p1);
 
@@ -398,7 +410,7 @@ public:
 	}
 	
 
-	void UpdateEnvironment(const std::vector<std::pair<Matrix<2>, Matrix<2,2>>>& tmppoints, const int& cal_obstacles)
+	void UpdateEnvironment(const int& cal_obstacles)
 	{
 		points.clear();
 		points.resize(11);
@@ -406,7 +418,6 @@ public:
 			points[i].first = tmppoints[i].first;
 			points[i].second = tmppoints[i].second;
 		}
-		std::cout<<"ppp "<<points.size()<<std::endl;
 		CreateObstacles(cal_obstacles);
 		CreateSegments();
 	}

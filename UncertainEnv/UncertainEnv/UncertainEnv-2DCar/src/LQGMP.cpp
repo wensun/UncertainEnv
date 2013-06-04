@@ -158,6 +158,8 @@ bool LQGMP::LQGSimulate(const Matrix<3,3>& initialCov, Primitive& PrimCollision,
 		Matrix<2> u = pathlqg[i-1].u + pathlqg[i-1].L*x_est_d;
 		x_true_new = dyn.dynamics_noise(x_true_old, u, sampleGaussian(zeros<2,1>(), M));
 
+		//PrimCollision.CreateRandomVertex();
+		//PrimCollision.CreateRandomSegs();
 		bool flag = false;
 		flag = PrimCollision.checkline(x_true_new.subMatrix<2,1>(0,0), x_true_old.subMatrix<2,1>(0,0));
 		if(flag == false){
@@ -273,6 +275,23 @@ double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const s
 			Matrix<2,2> A = ssegment.RotationM;
 			Matrix<2,1> x = pos;
 			Matrix<2,1> p1 = ssegment.p1; Matrix<2,1> p2 = ssegment.p2;
+
+		/*	double xx = x[0]; double yy = x[1];
+			double x1 = p1[0]; double y1 = p1[1];
+			double x2 = p2[0]; double y2 = p2[1];
+			double alpha = ((xx - x2)*(x1 - x2) + (yy - y2)*(y1 - y2)) / ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2));
+
+			Matrix<2,1> c = alpha*p1 + (1 - alpha)*p2;
+			std::cout<<tr(~(c - x)*(p1 - p2))<<std::endl;
+
+			Matrix<2,2> ccov = alpha*alpha * ssegment.S1 + (1-alpha)*(1-alpha)*ssegment.S2;
+			double mean = 2*tr(~c*x) - tr(~x*x) - tr(~c*c);
+			Matrix<2> D = 2*c - 2*x; Matrix<2> E = 2*x - 2*c;
+			double var = tr(~D*R*D) + tr(~E*ccov*E);
+			double alpha1 = (0 - mean) / sqrt(var);
+			double p = 1 - cdf(alpha1);
+			ps += p;*/
+
 			Matrix<2,1> D = A*p1 - A*p2; Matrix<2,1> E = (~A)*x - 2*(~A)*p1 + A*p2;
 			Matrix<2,1> F = -(~A)*x + (~A)*p1;
 			double mean = tr(~p1*~A*x) - tr(~p2*~A*x) - tr(~p1*~A*p1) + tr(~p2*~A*p1);
@@ -280,6 +299,7 @@ double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const s
 			double alpha = (0 - mean) / sqrt(var);
 			double p = 1 - cdf(alpha);
 			ps += p;
+			//ps*=cdf(alpha);
 		}
 		else if(s == (int)Prim.seg.size()){ //did not find line segment, then it should be a vertex.
 			//search for vertex;
@@ -299,6 +319,7 @@ double LQGMP::computeStatics(const Matrix<2>& pos, const Matrix<2,2>& R, const s
 				double alpha = (0 - mean) / sqrt(var);
 				double p = 1 - cdf(alpha);
 				ps += p;
+				//ps*= cdf(alpha);
 			}
 			else
 				std::cout<<"did not find a vertex nor a line segments"<<std::endl;

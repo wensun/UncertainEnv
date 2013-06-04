@@ -94,7 +94,7 @@ public:
 		pathlqg.clear();
 
 		M = identity<2>() * 0.05*0.05;
-		N = identity<2>() * 0.1*0.1;
+		N = identity<2>() * 0.08*0.08;
 
 		H.reset();
 		H(0,0) = 1; H(0,1) = 0; H(0,2) = 0; 

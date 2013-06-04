@@ -210,33 +210,31 @@ int main()
 	
 	Primitive PRIM;
 	PRIM.CreateSegments();
-
+		
 	CAL_Initialisation (true, true, false);
 	initEnvironment(PRIM);
 	uncertainEnv();
 
 	double plantime = 2;
 	double dt = 0.5;
-	Matrix<3,3> P0 = identity<3>() * 0.1*0.1;
+	Matrix<3,3> P0 = identity<3>() * 0.05*0.05;
 
 
 	RRT rrt(start, goal, dt, plantime, goal_radius, cal_obstacles);
 	rrt.setPlannerDefaults();
 	rrt.Plan_K_Seconds();
 	showPath(cal_rrt, rrt.pathSet[0]);
-	//rrt.showPath(cal_rrt);
+	
 
 	LQGMP lqgmp(rrt.pathSet[0], dt, P0, PRIM, cal_obstacles);
 	double prob = exp(lqgmp.computeProbability(P0, cal_obstacles, cal_environment, cal_point));
 	lqgmp.draw_prior_distribution(cal_ellipse);
-
 	double ps = lqgmp.boolprobsuccess(cal_obstacles, cal_environment, cal_point, P0);
 	std::cout<<ps<<std::endl;
-
 	double pstrunc = lqgmp.computeLQGMPTruncate(cal_obstacles, cal_environment, cal_point, P0);
 	std::cout<<pstrunc<<std::endl;
 	lqgmp.draw_truncate_distribution(cal_ellipse_trunc);
-
+	
 	int count = 0;
 	for(int i = 0; i < 1000; i++){
 		Primitive collision;

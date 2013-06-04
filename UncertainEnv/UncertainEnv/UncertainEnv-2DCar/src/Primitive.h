@@ -62,7 +62,7 @@ public:
 
 		Matrix<2> p1 = zeros<2,1>(); p1(0,0) = 0; p1(1,0) = 6;
 		//Matrix<2,2> S1 = 0.03 * identity<2>();
-		Matrix<2,2> S1 = 0.005 * identity<2>();
+		Matrix<2,2> S1 = 0.003 * identity<2>();
 		//Matrix<2,2> S1 = 0.000 * identity<2>();
 		points[0] = std::make_pair(p1, S1);
 
@@ -92,7 +92,7 @@ public:
 		
 		Matrix<2> p6 = zeros<2,1>(); p6(0,0) = 3; p6(1,0) = 5;
 		//Matrix<2,2> S6 = 0.005 * identity<2>();
-		Matrix<2,2> S6 = 0.005 * identity<2>();	
+		Matrix<2,2> S6 = 0.003 * identity<2>();	
 		//Matrix<2,2> S6 = 0.00 * identity<2>();		
 		points[5] = std::make_pair(p6, S6);
 
